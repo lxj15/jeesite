@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.testc.dao.SysStudinfoDao">
+    
+	<sql id="sysStudinfoColumns">
+		a.id AS "id",
+		a.stud_num AS "studNum",
+		a.stud_name AS "studName",
+		a.class_num AS "SysClassinfo.id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="sysStudinfoJoins">
+		LEFT JOIN sys_classinfo b ON b.id = a.class_num
+	</sql>
+    
+	<select id="get" resultType="SysStudinfo">
+		SELECT 
+			<include refid="sysStudinfoColumns"/>
+		FROM sys_studinfo a
+		<include refid="sysStudinfoJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="SysStudinfo">
+		SELECT 
+			<include refid="sysStudinfoColumns"/>
+		FROM sys_studinfo a
+		<include refid="sysStudinfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="studNum != null and studNum != ''">
+				AND a.stud_num = #{studNum}
+			</if>
+			<if test="studName != null and studName != ''">
+				AND a.stud_name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{studName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{studName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{studName},'%')</if>
+			</if>
+			<if test="SysClassinfo != null and SysClassinfo.id != null and SysClassinfo.id != ''">
+				AND a.class_num = #{SysClassinfo.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="SysStudinfo">
+		SELECT 
+			<include refid="sysStudinfoColumns"/>
+		FROM sys_studinfo a
+		<include refid="sysStudinfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO sys_studinfo(
+			id,
+			stud_num,
+			stud_name,
+			class_num,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{studNum},
+			#{studName},
+			#{SysClassinfo.id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE sys_studinfo SET 	
+			stud_num = #{studNum},
+			stud_name = #{studName},
+			class_num = #{SysClassinfo.id},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE sys_studinfo SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE class_num = #{SysClassinfo.id}
+			</otherwise>
+		</choose>
+	</update>
+	
+</mapper>
